@@ -1,4 +1,5 @@
 require 'orm_adapter'
+require 'pathname'
 
 module Ckeditor
   IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg', 'image/pjpeg', 'image/tiff', 'image/x-png']
@@ -20,6 +21,7 @@ module Ckeditor
   module Backend
     autoload :Paperclip, 'ckeditor/backend/paperclip'
     autoload :CarrierWave, 'ckeditor/backend/carrierwave'
+    autoload :Dragonfly, 'ckeditor/backend/dragonfly'
   end
   
   # Allowed image file types for upload. 
@@ -36,10 +38,29 @@ module Ckeditor
   mattr_accessor :relative_path
   @@relative_path = '/assets/ckeditor'
   
+  # Ckeditor assets for precompilation
+  mattr_accessor :assets
+  @@assets = nil
+
+  # Turn on/off filename parameterize
+  mattr_accessor :parameterize_filenames
+  @@parameterize_filenames = true
+  
   # Default way to setup Ckeditor. Run rails generate ckeditor to create
   # a fresh initializer with all configuration values.
   def self.setup
     yield self
+  end
+  
+  def self.root_path
+    @root_path ||= Pathname.new( File.dirname(File.expand_path('../', __FILE__)) )
+  end
+  
+  def self.assets
+    @@assets ||= begin
+      Utils.select_assets("vendor/assets/javascripts/ckeditor", "vendor/assets/javascripts") +
+      Utils.select_assets("app/assets/javascripts/ckeditor/plugins", "app/assets/javascripts")
+    end
   end
   
   def self.picture_model
